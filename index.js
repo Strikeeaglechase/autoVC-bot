@@ -175,16 +175,20 @@ async function handleVCUpdate(oldState, newState) {
 			} else {
 				name = member.user.username + " - " + SETTINGS.DEFAULT_NAME;
 			}
-			const newChannel = await newState.guild.channels.create(
-				SETTINGS.CHANNEL_PREFIX + name,
-				{
-					type: "voice",
-					parent: joinedChannel.parentID,
-				}
-			);
-			member.edit({
-				channel: newChannel,
-			});
+			try {
+				const newChannel = await newState.guild.channels.create(
+					SETTINGS.CHANNEL_PREFIX + name,
+					{
+						type: "voice",
+						parent: joinedChannel.parentID,
+					}
+				);
+				member.edit({
+					channel: newChannel,
+				});
+			} catch (e) {
+				console.log("Perm error");
+			}
 		}
 	}
 	if (oldState.channelID != undefined) {
