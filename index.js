@@ -26,6 +26,9 @@ client.on("ready", () => {
 
 client.on("message", async (message) => {
 	handleMessage(message);
+	if (message.content == "-whoami") {
+		message.reply(process.env.whoami);
+	}
 });
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
@@ -62,16 +65,15 @@ async function handleInit(message) {
 			'```diff\n-ERROR: You do not have the "MANAGE_CHANNELS" permissions```'
 		);
 	} else {
-		const newChannel = await message.guild.channels.create(
-			SETTINGS.VC_CREATOR_NAME,
-			{
-				type: "voice",
-			}
-		);
-		if (!newChannel) {
-			message.channel.send(
-				"```diff\n-ERROR: Bot could not create channel. Does it have the permissions?```"
+		try {
+			const newChannel = await message.guild.channels.create(
+				SETTINGS.VC_CREATOR_NAME,
+				{
+					type: "voice",
+				}
 			);
+		} catch (e) {
+			return "```diff\n-ERROR: Bot could not create channel. Does it have the permissions?```";
 		}
 	}
 }
