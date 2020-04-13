@@ -11,7 +11,7 @@ const BASE_SETTINGS = {
 	MIN_NAME_LEN: 3,
 	DEFAULT_NAME: "General",
 	ALLOW_CUSTOM_NAME: true,
-	logChannel: "",
+	LOG_CHANNEL: "-",
 };
 
 const SETTING_VALIDATE = {
@@ -20,6 +20,7 @@ const SETTING_VALIDATE = {
 	MIN_NAME_LEN: (val) => typeof val == "number",
 	DEFAULT_NAME: (val) => typeof val == "string" && val.length > 1,
 	ALLOW_CUSTOM_NAME: (val) => typeof val == "boolean",
+	LOG_CHANNEL: (val) => typeof val == "string" && val.length == 18,
 };
 
 client.on("ready", () => {
@@ -45,7 +46,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 
 client.login(process.env.TOKEN);
 
-async function editVCName(vc, commandText, gId) {
+async function editVCName(vc, commandText, member, gId) {
 	if (!vc) {
 		return "```diff\n-ERROR: You must be in a voice call to use that command```";
 	}
@@ -60,7 +61,14 @@ async function editVCName(vc, commandText, gId) {
 		return "```diff\n-ERROR: You cannot edit the channel name of a non-bot created vc```";
 	} else {
 		try {
+			const oldName = vc.name;
 			await vc.edit({ name: SETTINGS[gId].CHANNEL_PREFIX + newName });
+			log(
+				"Channel Name Update",
+				member.user,
+				gId,
+				oldName + " -> " + vc.name
+			);
 		} catch (e) {
 			return "```diff\n-ERROR: Invalid name```";
 		}
@@ -144,7 +152,8 @@ function handleConfig(command, member, gId) {
 		value = true;
 	} else if (value == "false") {
 		value = false;
-	} else if (!isNaN(parseInt(value))) {
+	} else if (!isNaN(parseInt(value)) && value.length != 18) {
+		//God this solotion is bad but it works
 		value = parseInt(value);
 	}
 	const isValid = SETTING_VALIDATE[key](value);
@@ -163,7 +172,7 @@ async function handleMessage(message) {
 		retMessage = await handleInit(message, gId);
 	} else if (message.content.startsWith("-name")) {
 		const vc = message.member.voice.channel;
-		retMessage = await editVCName(vc, message.content, gId);
+		retMessage = await editVCName(vc, message.content, message.member, gId);
 	} else if (message.content.startsWith("-help")) {
 		helpMessage(message);
 	} else if (message.content.startsWith("-config")) {
@@ -175,10 +184,10 @@ async function handleMessage(message) {
 }
 
 async function handleVCUpdate(oldState, newState, gId) {
+	const member = (newState || oldState).member;
 	if (newState.channelID != undefined) {
 		const joinedChannel = newState.guild.channels.resolve(newState.channelID);
 		if (joinedChannel.name == SETTINGS[gId].VC_CREATOR_NAME) {
-			const member = newState.member;
 			var activity = member.presence.activities.find(
 				(act) => act.type == "PLAYING"
 			);
@@ -199,8 +208,14 @@ async function handleVCUpdate(oldState, newState, gId) {
 				member.edit({
 					channel: newChannel,
 				});
+				log("New channel", member.user, gId, name);
 			} catch (e) {
-				console.log("Perm error");
+				log(
+					"Error!,",
+					undefined,
+					gId,
+					"bot does not have correct permissions"
+				);
 			}
 		}
 	}
@@ -215,8 +230,16 @@ async function handleVCUpdate(oldState, newState, gId) {
 			leftChannel.members.array().length == 0
 		) {
 			try {
+				log(
+					"Channel deleted,",
+					member.user,
+					gId,
+					"all members left the channel"
+				);
 				leftChannel.delete();
-			} catch (e) {}
+			} catch (e) {
+				log("Error!,", undefined, gId, "bot failed to delete channel");
+			}
 		} else if (leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX) {
 			const membs = leftChannel.members.array();
 			var foundNew = false;
@@ -226,11 +249,24 @@ async function handleVCUpdate(oldState, newState, gId) {
 				);
 				if (activity) {
 					try {
+						const prevName = leftChannel.name;
+						const newName = SETTINGS[gId].CHANNEL_PREFIX + activity.name;
 						leftChannel.edit({
 							name: SETTINGS[gId].CHANNEL_PREFIX + activity.name,
 						});
+						log(
+							"Channel Name Update",
+							member.user,
+							gId,
+							prevName + " -> " + newName
+						);
 					} catch (e) {
-						console.log("Failed to edit channel name");
+						log(
+							"Error!,",
+							undefined,
+							gId,
+							"bot failed to rename channel"
+						);
 					}
 					foundNew = true;
 					break;
@@ -238,14 +274,28 @@ async function handleVCUpdate(oldState, newState, gId) {
 			}
 			if (!foundNew && membs.length > 0) {
 				try {
+					const prevName = leftChannel.name;
+					const newName =
+						SETTINGS[gId].CHANNEL_PREFIX +
+						membs[0].user.username +
+						" - " +
+						SETTINGS[gId].DEFAULT_NAME;
 					leftChannel.edit({
-						name:
-							SETTINGS[gId].CHANNEL_PREFIX +
-							membs[0].user.username +
-							" - " +
-							SETTINGS[gId].DEFAULT_NAME,
+						name: newName,
 					});
+					log(
+						"Channel Name Update",
+						member.user,
+						gId,
+						prevName + " -> " + newName
+					);
 				} catch (e) {
+					log(
+						"Error!,",
+						undefined,
+						gId,
+						"bot failed to edit channel name"
+					);
 					console.log("Failed to edit channel name");
 				}
 			}
@@ -253,11 +303,22 @@ async function handleVCUpdate(oldState, newState, gId) {
 	}
 }
 
-function log(event, causedBy, details, gId) {
+function log(event, causedBy, gId, details) {
 	const guild = client.guilds.resolve(gId);
-	const channel = guild.channels.resolve(SETTINGS[gId].logChannel);
+	const channel = guild.channels.resolve(SETTINGS[gId].LOG_CHANNEL);
 	if (!channel) {
 		return;
 	}
-	// const emb =
+	const emb = new Discord.MessageEmbed();
+	emb.setColor("#00ff00");
+	emb.setTitle("Log");
+	if (causedBy) {
+		emb.addField("Triggerd by:", causedBy, false);
+	}
+	emb.setDescription(event);
+	if (details) {
+		emb.addField("Info: ", details, false);
+	}
+	emb.setTimestamp();
+	channel.send(emb);
 }
