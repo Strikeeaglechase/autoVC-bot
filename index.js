@@ -210,12 +210,7 @@ async function handleVCUpdate(oldState, newState, gId) {
 				});
 				log("New channel", member.user, gId, name);
 			} catch (e) {
-				log(
-					"Error!,",
-					undefined,
-					gId,
-					"bot does not have correct permissions"
-				);
+				log("Error!,", undefined, gId, "could not create new channel");
 			}
 		}
 	}
@@ -305,7 +300,12 @@ async function handleVCUpdate(oldState, newState, gId) {
 
 function log(event, causedBy, gId, details) {
 	const guild = client.guilds.resolve(gId);
-	const channel = guild.channels.resolve(SETTINGS[gId].LOG_CHANNEL);
+	var channel;
+	try {
+		channel = guild.channels.resolve(SETTINGS[gId].LOG_CHANNEL);
+	} catch (e) {
+		return;
+	}
 	if (!channel) {
 		return;
 	}
