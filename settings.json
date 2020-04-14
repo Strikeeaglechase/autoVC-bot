@@ -1,1 +1,30 @@
-{"583599626280632320":{"VC_CREATOR_ID":"695649725478731826","CHANNEL_PREFIX":">","MIN_NAME_LEN":3,"DEFAULT_NAME":"General","ALLOW_CUSTOM_NAME":true,"LOG_CHANNEL":"699445910115188797","channelUpdate":"#0000ff","channelCreate":"#00ff00","channelDelete":"#ff0000","vcJoin":"#ccff33","vcLeave":"#ff6600","DEFAULT_BITRATE":64000},"647138462444552213":{"VC_CREATOR_ID":"699383631503949976","CHANNEL_PREFIX":">","MIN_NAME_LEN":3,"DEFAULT_NAME":"General","ALLOW_CUSTOM_NAME":true,"LOG_CHANNEL":"-","channelUpdate":"#0000ff","channelCreate":"#00ff00","channelDelete":"#ff0000","vcJoin":"#ccff33","vcLeave":"#ff6600","DEFAULT_BITRATE":10000}}
+{
+	"583599626280632320": {
+		"VC_CREATOR_ID": "695649725478731826",
+		"CHANNEL_PREFIX": ">",
+		"MIN_NAME_LEN": 3,
+		"DEFAULT_NAME": "General",
+		"ALLOW_CUSTOM_NAME": true,
+		"LOG_CHANNEL": "699445910115188797",
+		"channelUpdate": "#0000ff",
+		"channelCreate": "#00ff00",
+		"channelDelete": "#ff0000",
+		"vcJoin": "#ccff33",
+		"vcLeave": "#ff6600",
+		"DEFAULT_BITRATE": 64000
+	},
+	"647138462444552213": {
+		"VC_CREATOR_ID": "699383631503949976",
+		"CHANNEL_PREFIX": ">",
+		"MIN_NAME_LEN": 3,
+		"DEFAULT_NAME": "General",
+		"ALLOW_CUSTOM_NAME": true,
+		"LOG_CHANNEL": "652992116766539777",
+		"channelUpdate": "#0000ff",
+		"channelCreate": "#00ff00",
+		"channelDelete": "#ff0000",
+		"vcJoin": "#ccff33",
+		"vcLeave": "#ff6600",
+		"DEFAULT_BITRATE": 10000
+	}
+}

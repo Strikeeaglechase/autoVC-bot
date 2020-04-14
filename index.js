@@ -80,7 +80,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 });
 
 client.on("channelUpdate", (oldChannel, newChannel) => {
-	if (!channel.guild) {
+	if (!newChannel.guild) {
 		return;
 	}
 	if (newChannel.type != "voice" || oldChannel.name == newChannel.name) {
@@ -300,7 +300,7 @@ async function handleVCJoin(newState, gId) {
 				return;
 			}
 			const newChannel = await newState.guild.channels.create(
-				SETTINGS[gId].CHANNEL_PREFIX + name,
+				SETTINGS[gId].CHANNEL_PREFIX + " " + name,
 				{
 					type: "voice",
 					parent: joinedChannel.parentID,
