@@ -44,7 +44,7 @@ client.on("ready", () => {
 
 client.on("message", async (message) => {
 	if (!SETTINGS[message.guild.id]) {
-		initSettings(channel.guild.id);
+		initSettings(message.guild.id);
 	}
 	handleMessage(message);
 	if (message.content == "-whoami") {
