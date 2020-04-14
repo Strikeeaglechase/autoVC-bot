@@ -18,6 +18,7 @@ const BASE_SETTINGS = {
 	channelDelete: "#ff0000",
 	vcJoin: "#ccff33",
 	vcLeave: "#ff6600",
+	DEFAULT_BITRATE: 64000,
 };
 
 const hexValidate = (val) =>
@@ -35,14 +36,27 @@ const SETTING_VALIDATE = {
 	channelDelete: hexValidate,
 	vcJoin: hexValidate,
 	vcLeave: hexValidate,
+	DEFAULT_BITRATE: (val) => typeof val == "number",
 };
 
 client.on("ready", () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 	SETTINGS = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
+	for (var gId in SETTINGS) {
+		for (var key in BASE_SETTINGS) {
+			if (SETTINGS[gId][key] == undefined) {
+				SETTINGS[gId][key] = BASE_SETTINGS[key];
+			}
+		}
+	}
+	fs.writeFileSync(settingsFile, JSON.stringify(SETTINGS));
 });
 
 client.on("message", async (message) => {
+	if (!message.guild) {
+		console.log("%s dm'ed the bot: %s", message.author, message.content);
+		return;
+	}
 	if (!SETTINGS[message.guild.id]) {
 		initSettings(message.guild.id);
 	}
@@ -53,6 +67,12 @@ client.on("message", async (message) => {
 });
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
+	if (!oldState && !newState) {
+		return;
+	}
+	if (!(oldState || newState).guild) {
+		return;
+	}
 	if (!SETTINGS[newState.guild.id]) {
 		initSettings(channel.guild.id);
 	}
@@ -60,6 +80,12 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 });
 
 client.on("channelUpdate", (oldChannel, newChannel) => {
+	if (!channel.guild) {
+		return;
+	}
+	if (newChannel.type != "voice" || oldChannel.name == newChannel.name) {
+		return;
+	}
 	if (!SETTINGS[newChannel.guild.id]) {
 		initSettings(channel.guild.id);
 	}
@@ -81,6 +107,9 @@ client.on("channelUpdate", (oldChannel, newChannel) => {
 });
 
 client.on("channelCreate", (channel) => {
+	if (!channel.guild) {
+		return;
+	}
 	if (!SETTINGS[channel.guild.id]) {
 		initSettings(channel.guild.id);
 	}
@@ -92,6 +121,9 @@ client.on("channelCreate", (channel) => {
 });
 
 client.on("channelDelete", (channel) => {
+	if (!channel.guild) {
+		return;
+	}
 	log({
 		name: "Channel deleted " + channel.name,
 		gId: channel.guild.id,
@@ -272,12 +304,14 @@ async function handleVCJoin(newState, gId) {
 				{
 					type: "voice",
 					parent: joinedChannel.parentID,
+					bitrate: SETTINGS[gId].DEFAULT_BITRATE,
 				}
 			);
 			member.edit({
 				channel: newChannel,
 			});
 		} catch (e) {
+			console.log("Failed to create channel correctly");
 			console.log(e);
 		}
 	}
