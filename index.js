@@ -3,6 +3,7 @@ const fs = require("fs");
 const Discord = require("discord.js");
 const client = new Discord.Client();
 const settingsFile = "./settings.json";
+const MAX_EMPTY = 2;
 var SETTINGS = {};
 
 const BASE_SETTINGS = {
@@ -91,7 +92,6 @@ client.on("channelCreate", (channel) => {
 });
 
 client.on("channelDelete", (channel) => {
-	// console.log(channel);
 	log({
 		name: "Channel deleted " + channel.name,
 		gId: channel.guild.id,
@@ -256,6 +256,17 @@ async function handleVCJoin(newState, gId) {
 			name = member.user.username + " - " + SETTINGS[gId].DEFAULT_NAME;
 		}
 		try {
+			const numExist = newState.guild.channels.cache.filter((channel) => {
+				return (
+					channel.name[0] == SETTINGS[gId].CHANNEL_PREFIX &&
+					channel.type == "voice" &&
+					channel.members.array().length == 0
+				);
+			});
+			if (numExist.array().length > MAX_EMPTY) {
+				console.log("---TOO MANY EMPTY CHANNELS---");
+				return;
+			}
 			const newChannel = await newState.guild.channels.create(
 				SETTINGS[gId].CHANNEL_PREFIX + name,
 				{
@@ -266,12 +277,13 @@ async function handleVCJoin(newState, gId) {
 			member.edit({
 				channel: newChannel,
 			});
-		} catch (e) {}
+		} catch (e) {
+			console.log(e);
+		}
 	}
 }
 
 async function handleVCLeave(oldState, gId) {
-	console.log(gId, SETTINGS);
 	const leftChannel = oldState.guild.channels.resolve(oldState.channelID);
 	if (!leftChannel) {
 		return;
@@ -282,7 +294,10 @@ async function handleVCLeave(oldState, gId) {
 	) {
 		try {
 			leftChannel.delete();
-		} catch (e) {}
+		} catch (e) {
+			console.log("CHANNEL DELETE FAILED!!!");
+			console.log(e);
+		}
 	} else if (leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX) {
 		const membs = leftChannel.members.array();
 		var foundNew = false;
@@ -295,7 +310,9 @@ async function handleVCLeave(oldState, gId) {
 					leftChannel.edit({
 						name: SETTINGS[gId].CHANNEL_PREFIX + activity.name,
 					});
-				} catch (e) {}
+				} catch (e) {
+					console.log(e);
+				}
 				foundNew = true;
 				break;
 			}
@@ -311,7 +328,9 @@ async function handleVCLeave(oldState, gId) {
 				leftChannel.edit({
 					name: newName,
 				});
-			} catch (e) {}
+			} catch (e) {
+				console.log(e);
+			}
 		}
 	}
 }
