@@ -43,9 +43,7 @@ client.on("ready", () => {
 
 client.on("message", async (message) => {
 	if (!SETTINGS[message.guild.id]) {
-		SETTINGS[message.guild.id] = BASE_SETTINGS;
-		console.log("Init settings done for %s", message.guild.id);
-		fs.writeFileSync(settingsFile, JSON.stringify(SETTINGS));
+		initSettings(channel.guild.id);
 	}
 	handleMessage(message);
 	if (message.content == "-whoami") {
@@ -54,10 +52,16 @@ client.on("message", async (message) => {
 });
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
+	if (!SETTINGS[newState.guild.id]) {
+		initSettings(channel.guild.id);
+	}
 	handleVCUpdate(oldState, newState, (oldState || newState).guild.id);
 });
 
 client.on("channelUpdate", (oldChannel, newChannel) => {
+	if (!SETTINGS[newChannel.guild.id]) {
+		initSettings(channel.guild.id);
+	}
 	log({
 		name: "Channel updated " + newChannel.toString(),
 		gId: newChannel.guild.id,
@@ -76,6 +80,9 @@ client.on("channelUpdate", (oldChannel, newChannel) => {
 });
 
 client.on("channelCreate", (channel) => {
+	if (!SETTINGS[channel.guild.id]) {
+		initSettings(channel.guild.id);
+	}
 	log({
 		name: "Channel created " + channel.toString(),
 		gId: channel.guild.id,
@@ -93,6 +100,12 @@ client.on("channelDelete", (channel) => {
 });
 
 client.login(process.env.TOKEN);
+
+function initSettings(id) {
+	SETTINGS[id] = BASE_SETTINGS;
+	console.log("Init settings done for %s", id);
+	fs.writeFileSync(settingsFile, JSON.stringify(SETTINGS));
+}
 
 function error(msg) {
 	return "```diff\n-ERROR: " + msg + " ```";
@@ -258,6 +271,7 @@ async function handleVCJoin(newState, gId) {
 }
 
 async function handleVCLeave(oldState, gId) {
+	console.log(gId, SETTINGS);
 	const leftChannel = oldState.guild.channels.resolve(oldState.channelID);
 	if (!leftChannel) {
 		return;
