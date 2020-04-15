@@ -36,11 +36,12 @@ const SETTING_VALIDATE = {
 	channelDelete: hexValidate,
 	vcJoin: hexValidate,
 	vcLeave: hexValidate,
-	DEFAULT_BITRATE: (val) => typeof val == "number",
+	DEFAULT_BITRATE: (val) =>
+		typeof val == "number" && val > 8000 && val < 260000,
 };
 
 client.on("ready", () => {
-	console.log(`Logged in as ${client.user.tag}!`);
+	cLog(`Logged in as ${client.user.tag}!`);
 	SETTINGS = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
 	for (var gId in SETTINGS) {
 		for (var key in BASE_SETTINGS) {
@@ -54,7 +55,7 @@ client.on("ready", () => {
 
 client.on("message", async (message) => {
 	if (!message.guild) {
-		console.log("%s dm'ed the bot: %s", message.author, message.content);
+		cLog("%s dm'ed the bot: %s", message.author, message.content);
 		return;
 	}
 	if (!SETTINGS[message.guild.id]) {
@@ -135,7 +136,7 @@ client.login(process.env.TOKEN);
 
 function initSettings(id) {
 	SETTINGS[id] = BASE_SETTINGS;
-	console.log("Init settings done for %s", id);
+	cLog("Init settings done for %s", id);
 	fs.writeFileSync(settingsFile, JSON.stringify(SETTINGS));
 }
 
@@ -296,7 +297,7 @@ async function handleVCJoin(newState, gId) {
 				);
 			});
 			if (numExist.array().length > MAX_EMPTY) {
-				console.log("---TOO MANY EMPTY CHANNELS---");
+				cLog("---TOO MANY EMPTY CHANNELS---");
 				return;
 			}
 			const newChannel = await newState.guild.channels.create(
@@ -311,8 +312,8 @@ async function handleVCJoin(newState, gId) {
 				channel: newChannel,
 			});
 		} catch (e) {
-			console.log("Failed to create channel correctly");
-			console.log(e);
+			cLog("Failed to create channel correctly");
+			cLog(e);
 		}
 	}
 }
@@ -329,8 +330,8 @@ async function handleVCLeave(oldState, gId) {
 		try {
 			leftChannel.delete();
 		} catch (e) {
-			console.log("CHANNEL DELETE FAILED!!!");
-			console.log(e);
+			cLog("CHANNEL DELETE FAILED!!!");
+			cLog(e);
 		}
 	} else if (leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX) {
 		const membs = leftChannel.members.array();
@@ -345,7 +346,7 @@ async function handleVCLeave(oldState, gId) {
 						name: SETTINGS[gId].CHANNEL_PREFIX + activity.name,
 					});
 				} catch (e) {
-					console.log(e);
+					cLog(e);
 				}
 				foundNew = true;
 				break;
@@ -363,7 +364,7 @@ async function handleVCLeave(oldState, gId) {
 					name: newName,
 				});
 			} catch (e) {
-				console.log(e);
+				cLog(e);
 			}
 		}
 	}
@@ -452,4 +453,9 @@ function log(opts) {
 	}
 	emb.setTimestamp();
 	channel.send(emb);
+}
+
+function cLog() {
+	console.log(Date().split(" ")[4] + ":");
+	console.log(...arguments);
 }
