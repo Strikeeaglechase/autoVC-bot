@@ -5,7 +5,7 @@ const client = new Discord.Client();
 const settingsFile = "./settings.json";
 const MAX_EMPTY = 2;
 var SETTINGS = {};
-
+var ownerships = [];
 const BASE_SETTINGS = {
 	VC_CREATOR_ID: "-",
 	CHANNEL_PREFIX: ">",
@@ -19,13 +19,16 @@ const BASE_SETTINGS = {
 	vcJoin: "#ccff33",
 	vcLeave: "#ff6600",
 	DEFAULT_BITRATE: 64000,
+	USER_LIMIT: 0,
+	AUTO_UPDATE_NAME: true,
+	USERNAME_IN_VC: true,
 };
 
 const hexValidate = (val) =>
 	typeof val == "string" && val[0] == "#" && val.length == 7;
 
 const SETTING_VALIDATE = {
-	VC_CREATOR_ID: (val) => typeof val == "string" && val.length > 1,
+	VC_CREATOR_ID: (val) => typeof val == "string" && val.length == 18,
 	CHANNEL_PREFIX: (val) => typeof val == "string" && val.length == 1,
 	MIN_NAME_LEN: (val) => typeof val == "number",
 	DEFAULT_NAME: (val) => typeof val == "string" && val.length > 1,
@@ -38,6 +41,9 @@ const SETTING_VALIDATE = {
 	vcLeave: hexValidate,
 	DEFAULT_BITRATE: (val) =>
 		typeof val == "number" && val > 8000 && val < 260000,
+	USER_LIMIT: (val) => typeof val == "number" && val < 99 && val >= 0,
+	AUTO_UPDATE_NAME: (val) => typeof val == "boolean",
+	USERNAME_IN_VC: (val) => typeof val == "boolean",
 };
 
 client.on("ready", () => {
@@ -144,7 +150,11 @@ function error(msg) {
 	return "```diff\n-ERROR: " + msg + " ```";
 }
 
-async function editVCName(vc, commandText, gId) {
+function success(msg) {
+	return "```diff\n+DONE: " + msg + " ```";
+}
+
+async function editVCName(vc, commandText, member, gId) {
 	if (!vc) {
 		return error("You must be in a voice call to use that command");
 	}
@@ -157,33 +167,39 @@ async function editVCName(vc, commandText, gId) {
 	}
 	if (vc.name[0] != SETTINGS[gId].CHANNEL_PREFIX) {
 		return error("You cannot edit the channel name of a non-bot created vc");
-	} else {
+	}
+	const owner = ownerships.find((ownership) => ownership.id == vc.id);
+	if (!owner || owner.ownerId == member.id) {
+		if (owner) {
+			owner.isCustomName = true;
+		}
 		try {
-			const oldName = vc.name;
 			await vc.edit({ name: SETTINGS[gId].CHANNEL_PREFIX + newName });
 		} catch (e) {
 			return error("Invalid name");
 		}
+	} else if (owner.ownerId != member.id) {
+		return error("You are not the owner of this vc");
 	}
 }
 
-async function handleInit(message, gId) {
-	if (!message.member.hasPermission("MANAGE_CHANNELS")) {
-		return error('You do not have the "MANAGE_CHANNELS" permissions');
-	} else {
-		try {
-			const newChannel = await message.guild.channels.create(
-				SETTINGS[gId].VC_CREATOR_ID,
-				{
-					type: "voice",
-				}
-			);
-		} catch (e) {
-			return error(
-				"Bot could not create channel. Does it have the permissions?"
-			);
-		}
+function removeCustomName(member) {
+	if (!member.voice) {
+		return error("You must be in a voice call to use that command");
 	}
+	const owner = ownerships.find(
+		(ownership) => ownership.id == member.voice.channelID
+	);
+	if (!owner) {
+		return error(
+			"Could not resolve channel owner... if ownership is required please create a new vc"
+		);
+	}
+	if (owner.ownerId != member.id) {
+		return error("You must be the owner of the vc to use this command");
+	}
+	owner.isCustomName = false;
+	updateVCName();
 }
 
 async function helpMessage(message) {
@@ -192,7 +208,11 @@ async function helpMessage(message) {
 	emb.setTitle("Auto VC Help");
 	emb.setAuthor(message.author.username);
 	emb.setDescription("Help:");
-	emb.addField("**-init**", 'Creates the "Create VC" voice channel', false);
+	emb.addField(
+		"**Setup:**",
+		"To setup the bot all you must do is run `-config VC_CREATOR_ID [VoiceChannelId]\nVoiceChannelId should be a ",
+		false
+	);
 	emb.addField(
 		"**-name** [name]",
 		"Changes the name of the current voice channel",
@@ -204,6 +224,12 @@ async function helpMessage(message) {
 		"Change a config setting",
 		false
 	);
+	emb.addField(
+		"**-changeOwner [userMention]**",
+		"Set a VC to a different owner",
+		false
+	);
+	emb.addField("**-resetName**", "Remove a VC's custom name", false);
 	emb.setTimestamp();
 	emb.setFooter("Bot created by Strikeeaglechase#0001");
 	message.channel.send(emb);
@@ -254,21 +280,46 @@ function handleConfig(command, member, gId) {
 	}
 	SETTINGS[gId][key] = value;
 	fs.writeFileSync(settingsFile, JSON.stringify(SETTINGS));
-	return "```diff\n+DONE: Set " + key + " to " + value + "```";
+	return success("Set " + key + " to " + value);
+}
+
+function changeOwner(message, member) {
+	if (!member.voice) {
+		return error("You must be in a voice channel to use this command");
+	}
+	const owner = ownerships.find(
+		(ownership) => ownership.id == member.voice.channelID
+	);
+	if (!owner) {
+		return error(
+			"Could not resolve channel owner... if ownership is required please create a new vc"
+		);
+	}
+	if (owner.ownerId != member.id) {
+		return error("You must be the owner of the vc to use this command");
+	}
+	const transferTo = message.mentions.users.array()[0];
+	if (!transferTo) {
+		return error("You must mention a member to transfer to");
+	}
+	owner.ownerId = transferTo.id;
+	return success("Ownership transferd");
 }
 
 async function handleMessage(message) {
 	var retMessage;
 	const gId = message.guild.id;
-	if (message.content == "-init") {
-		// retMessage = await handleInit(message, gId);
-	} else if (message.content.startsWith("-name")) {
+	if (message.content.startsWith("-name")) {
 		const vc = message.member.voice.channel;
-		retMessage = await editVCName(vc, message.content, gId);
+		retMessage = await editVCName(vc, message.content, message.member, gId);
 	} else if (message.content.startsWith("-help")) {
 		helpMessage(message);
 	} else if (message.content.startsWith("-config")) {
 		retMessage = handleConfig(message.content, message.member, gId);
+	} else if (message.content.startsWith("-changeOwner")) {
+		retMessage = changeOwner(message, message.member);
+	} else if (message.content.startsWith("-resetName")) {
+		removeCustomName(message.member);
 	}
 	if (retMessage) {
 		message.channel.send(retMessage);
@@ -286,7 +337,10 @@ async function handleVCJoin(newState, gId) {
 		if (activity) {
 			name = activity.name;
 		} else {
-			name = member.user.username + " - " + SETTINGS[gId].DEFAULT_NAME;
+			name = SETTINGS[gId].DEFAULT_NAME;
+			if (SETTINGS[gId].USERNAME_IN_VC) {
+				name = member.user.username + " - " + name;
+			}
 		}
 		try {
 			const numExist = newState.guild.channels.cache.filter((channel) => {
@@ -306,10 +360,17 @@ async function handleVCJoin(newState, gId) {
 					type: "voice",
 					parent: joinedChannel.parentID,
 					bitrate: SETTINGS[gId].DEFAULT_BITRATE,
+					userLimit: SETTINGS[gId].USER_LIMIT || undefined,
 				}
 			);
 			member.edit({
 				channel: newChannel,
+			});
+			ownerships.push({
+				id: newChannel.id,
+				ownerId: member.id,
+				guildId: newChannel.guild.id,
+				isCustomName: false,
 			});
 		} catch (e) {
 			cLog("Failed to create channel correctly");
@@ -328,12 +389,18 @@ async function handleVCLeave(oldState, gId) {
 		leftChannel.members.array().length == 0
 	) {
 		try {
+			ownerships = ownerships.filter(
+				(ownership) => ownership.id == leftChannel.id
+			);
 			leftChannel.delete();
 		} catch (e) {
 			cLog("CHANNEL DELETE FAILED!!!");
 			cLog(e);
 		}
-	} else if (leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX) {
+	} else if (
+		leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX &&
+		SETTINGS[gId].AUTO_UPDATE_NAME
+	) {
 		const membs = leftChannel.members.array();
 		var foundNew = false;
 		for (var i = 0; i < membs.length; i++) {
@@ -424,7 +491,7 @@ async function handleVCUpdate(oldState, newState, gId) {
 	}
 }
 
-function log(opts) {
+async function log(opts) {
 	const guild = client.guilds.resolve(opts.gId);
 	var channel;
 	try {
@@ -452,10 +519,68 @@ function log(opts) {
 		});
 	}
 	emb.setTimestamp();
-	channel.send(emb);
+	try {
+		await channel.send(emb);
+	} catch (e) {
+		if (e) {
+			cLog("Problem logging to log channel");
+			cLog(e);
+		}
+	}
 }
 
 function cLog() {
 	console.log(Date().split(" ")[4] + ":");
 	console.log(...arguments);
 }
+
+function updateVCName() {
+	ownerships.forEach((ownership) => {
+		const guild = client.guilds.resolve(ownership.guildId);
+		if (!guild) {
+			return;
+		}
+		const channel = guild.channels.resolve(ownership.id);
+		if (!channel) {
+			return;
+		}
+		// if (channel.members.array().length == 0) {
+		// 	cLog("Empty VC found... attempting delete");
+		// 	try {
+		// 		ownerships = ownerships.filter((c) => c.id != channel.id);
+		// 		channel.delete();
+		// 		return;
+		// 	} catch (e) {
+		// 		cLog("Failed channel delete");
+		// 		cLog(e);
+		// 	}
+		// }
+		const member = guild.members.resolve(ownership.ownerId);
+		const gId = guild.id;
+		if (SETTINGS[gId].AUTO_UPDATE_NAME) {
+			var activity = member.presence.activities.find(
+				(act) => act.type == "PLAYING"
+			);
+			var name;
+			if (activity) {
+				name = activity.name;
+			} else {
+				name = SETTINGS[gId].DEFAULT_NAME;
+				if (SETTINGS[gId].USERNAME_IN_VC) {
+					name = member.user.username + " - " + name;
+				}
+			}
+			name = SETTINGS[gId].CHANNEL_PREFIX + " " + name;
+			if (name != channel.name && !ownership.isCustomName) {
+				try {
+					channel.edit({ name: name });
+				} catch (e) {
+					cLog("Failed channel re-name");
+					cLog(e);
+				}
+			}
+		}
+	});
+}
+
+setInterval(updateVCName, 1000);
