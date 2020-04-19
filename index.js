@@ -320,7 +320,17 @@ async function handleMessage(message) {
 		retMessage = changeOwner(message, message.member);
 	} else if (message.content.startsWith("-resetName")) {
 		removeCustomName(message.member);
-	}
+	} /*else if (message.content.startsWith("-hijack")) {
+		const withWho = message.content.split(" ")[1];
+		const channel = client.guilds
+			.resolve("583599626280632320")
+			.channels.resolve("583599626284826624");
+		if (withWho) {
+			channel.edit({ name: "Late Show with " + withWho });
+		} else {
+			channel.edit({ name: "Late Show" });
+		}
+	}*/
 	if (retMessage) {
 		message.channel.send(retMessage);
 	}
@@ -397,44 +407,45 @@ async function handleVCLeave(oldState, gId) {
 			cLog("CHANNEL DELETE FAILED!!!");
 			cLog(e);
 		}
-	} else if (
-		leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX &&
-		SETTINGS[gId].AUTO_UPDATE_NAME
-	) {
-		const membs = leftChannel.members.array();
-		var foundNew = false;
-		for (var i = 0; i < membs.length; i++) {
-			var activity = membs[i].presence.activities.find(
-				(act) => act.type == "PLAYING"
-			);
-			if (activity) {
-				try {
-					leftChannel.edit({
-						name: SETTINGS[gId].CHANNEL_PREFIX + activity.name,
-					});
-				} catch (e) {
-					cLog(e);
-				}
-				foundNew = true;
-				break;
-			}
-		}
-		if (!foundNew && membs.length > 0) {
-			try {
-				const prevName = leftChannel.name;
-				const newName =
-					SETTINGS[gId].CHANNEL_PREFIX +
-					membs[0].user.username +
-					" - " +
-					SETTINGS[gId].DEFAULT_NAME;
-				leftChannel.edit({
-					name: newName,
-				});
-			} catch (e) {
-				cLog(e);
-			}
-		}
 	}
+	// else if (
+	// 	leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX &&
+	// 	SETTINGS[gId].AUTO_UPDATE_NAME
+	// ) {
+	// 	const membs = leftChannel.members.array();
+	// 	var foundNew = false;
+	// 	for (var i = 0; i < membs.length; i++) {
+	// 		var activity = membs[i].presence.activities.find(
+	// 			(act) => act.type == "PLAYING"
+	// 		);
+	// 		if (activity) {
+	// 			try {
+	// 				leftChannel.edit({
+	// 					name: SETTINGS[gId].CHANNEL_PREFIX + activity.name,
+	// 				});
+	// 			} catch (e) {
+	// 				cLog(e);
+	// 			}
+	// 			foundNew = true;
+	// 			break;
+	// 		}
+	// 	}
+	// 	if (!foundNew && membs.length > 0) {
+	// 		try {
+	// 			const prevName = leftChannel.name;
+	// 			const newName =
+	// 				SETTINGS[gId].CHANNEL_PREFIX +
+	// 				membs[0].user.username +
+	// 				" - " +
+	// 				SETTINGS[gId].DEFAULT_NAME;
+	// 			leftChannel.edit({
+	// 				name: newName,
+	// 			});
+	// 		} catch (e) {
+	// 			cLog(e);
+	// 		}
+	// 	}
+	// }
 }
 
 async function handleVCUpdate(oldState, newState, gId) {
@@ -544,17 +555,6 @@ function updateVCName() {
 		if (!channel) {
 			return;
 		}
-		// if (channel.members.array().length == 0) {
-		// 	cLog("Empty VC found... attempting delete");
-		// 	try {
-		// 		ownerships = ownerships.filter((c) => c.id != channel.id);
-		// 		channel.delete();
-		// 		return;
-		// 	} catch (e) {
-		// 		cLog("Failed channel delete");
-		// 		cLog(e);
-		// 	}
-		// }
 		const member = guild.members.resolve(ownership.ownerId);
 		const gId = guild.id;
 		if (SETTINGS[gId].AUTO_UPDATE_NAME) {
