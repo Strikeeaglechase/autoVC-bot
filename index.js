@@ -1,3 +1,4 @@
+//Invite link: https://discordapp.com/api/oauth2/authorize?client_id=650800972708446239&permissions=16777232&scope=bot
 require("dotenv").config();
 const fs = require("fs");
 const Discord = require("discord.js");
@@ -319,18 +320,8 @@ async function handleMessage(message) {
 	} else if (message.content.startsWith("-changeOwner")) {
 		retMessage = changeOwner(message, message.member);
 	} else if (message.content.startsWith("-resetName")) {
-		removeCustomName(message.member);
-	} /*else if (message.content.startsWith("-hijack")) {
-		const withWho = message.content.split(" ")[1];
-		const channel = client.guilds
-			.resolve("583599626280632320")
-			.channels.resolve("583599626284826624");
-		if (withWho) {
-			channel.edit({ name: "Late Show with " + withWho });
-		} else {
-			channel.edit({ name: "Late Show" });
-		}
-	}*/
+		retMessage = removeCustomName(message.member);
+	}
 	if (retMessage) {
 		message.channel.send(retMessage);
 	}
@@ -408,44 +399,6 @@ async function handleVCLeave(oldState, gId) {
 			cLog(e);
 		}
 	}
-	// else if (
-	// 	leftChannel.name[0] == SETTINGS[gId].CHANNEL_PREFIX &&
-	// 	SETTINGS[gId].AUTO_UPDATE_NAME
-	// ) {
-	// 	const membs = leftChannel.members.array();
-	// 	var foundNew = false;
-	// 	for (var i = 0; i < membs.length; i++) {
-	// 		var activity = membs[i].presence.activities.find(
-	// 			(act) => act.type == "PLAYING"
-	// 		);
-	// 		if (activity) {
-	// 			try {
-	// 				leftChannel.edit({
-	// 					name: SETTINGS[gId].CHANNEL_PREFIX + activity.name,
-	// 				});
-	// 			} catch (e) {
-	// 				cLog(e);
-	// 			}
-	// 			foundNew = true;
-	// 			break;
-	// 		}
-	// 	}
-	// 	if (!foundNew && membs.length > 0) {
-	// 		try {
-	// 			const prevName = leftChannel.name;
-	// 			const newName =
-	// 				SETTINGS[gId].CHANNEL_PREFIX +
-	// 				membs[0].user.username +
-	// 				" - " +
-	// 				SETTINGS[gId].DEFAULT_NAME;
-	// 			leftChannel.edit({
-	// 				name: newName,
-	// 			});
-	// 		} catch (e) {
-	// 			cLog(e);
-	// 		}
-	// 	}
-	// }
 }
 
 async function handleVCUpdate(oldState, newState, gId) {
