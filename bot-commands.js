@@ -1,5 +1,13 @@
 const Discord = require("discord.js");
 const CREATOR = "272143648114606083";
+const updates = [
+	"Made code not bad",
+	"Made -help cleaner",
+	"Made it so log messages with color #000000 wont be logged (can be used to disable logs)",
+	"Removed need for prefix based channels",
+	"Made channel name updates more consistant",
+	"Added bot status. Dm me for pricing info",
+];
 const commands = {
 	"[command name]": {
 		perms: [],
@@ -16,8 +24,6 @@ const commands = {
 		perms: [],
 		help: {
 			msg: "Ping the bot",
-			usage: "ping - usage",
-			example: "ping - example",
 		},
 		run: function (message) {
 			return "Pong!";
@@ -61,8 +67,6 @@ const commands = {
 		perms: [],
 		help: {
 			msg: "Show this help message",
-			usage: "help",
-			example: "help",
 		},
 		run: function (message) {
 			const emb = new Discord.MessageEmbed();
@@ -71,13 +75,15 @@ const commands = {
 			emb.setDescription("Help:");
 			for (var cmd in this.botCommands) {
 				if (this.botCommands[cmd].help) {
-					emb.addField(
-						"**" + cmd + ":** " + this.botCommands[cmd].help.msg,
-						this.botCommands[cmd].help.usage +
-							"\n" +
-							this.botCommands[cmd].help.example,
-						false
-					);
+					let str = "**" + cmd + ":** " + this.botCommands[cmd].help.msg;
+					let subStr = "";
+					if (this.botCommands[cmd].help.usage) {
+						subStr += this.botCommands[cmd].help.usage + "\n";
+					}
+					if (this.botCommands[cmd].help.example) {
+						subStr += this.botCommands[cmd].help.example;
+					}
+					emb.addField(str, subStr || "-", false);
 				}
 			}
 			emb.setTimestamp();
@@ -172,8 +178,6 @@ const commands = {
 		perms: [],
 		help: {
 			msg: "Remove a custom name",
-			usage: "removeName",
-			example: "removeName",
 		},
 		run: function (message) {
 			const vc = message.member.voice.channel;
@@ -225,6 +229,42 @@ const commands = {
 			}
 			channel.owner = message.guild.members.resolve(transferTo);
 			return this.success("Ownership transferd");
+		},
+	},
+	testAPI: {
+		perms: ["ADMINISTRATOR"],
+		help: undefined,
+		run: async function (message) {
+			let ret = "```\n";
+			let t;
+			t = Date.now();
+			const channel = await message.guild.channels.create("TEST CHANNEL", {
+				type: "voice",
+			});
+			ret += "Channel created took " + (Date.now() - t) + "ms\n";
+
+			t = Date.now();
+			await channel.edit({ name: "EDIT NAME" });
+			ret += "Channel edited took " + (Date.now() - t) + "ms\n";
+			t = Date.now();
+			await channel.delete();
+			ret += "Channel deleted took " + (Date.now() - t) + "ms\n";
+			return ret + "```";
+		},
+	},
+	info: {
+		perms: [],
+		help: {
+			msg: "Gives some bot info",
+		},
+		run: async function (message) {
+			const emb = new Discord.MessageEmbed();
+			const me = message.guild.members.resolve(CREATOR);
+			emb.setColor("#ff0044");
+			emb.addField("Creator", me || "Strikeeaglechase#0001", true);
+			emb.addField("Version", "2.0.0", true);
+			emb.addField("Updates", ">>> " + updates.join("\n"));
+			return emb;
 		},
 	},
 };

@@ -1,6 +1,10 @@
 const events = {
 	ready: function () {
 		this.log(`Logged in as ${this.client.user.tag}!`);
+		this.client.user.setPresence({
+			activity: { name: "[YOUR AD HERE]. Dm for info" },
+			status: "onlinew",
+		});
 	},
 	message: function (msg) {
 		this.handleMessage(msg);

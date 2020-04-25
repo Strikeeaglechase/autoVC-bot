@@ -5,6 +5,8 @@ const botEvents = require("./bot-events");
 const SettingsController = require("./settings.js");
 const DELETE_THRESHOLD = 250;
 const PRECENSE_UPDATE_RATE = 2000;
+// const mlogServer = "647138462444552213";
+// const mlogChannel = "703268292932141127";
 class App {
 	constructor() {
 		this.client = new Discord.Client();
@@ -153,6 +155,9 @@ class App {
 		console.log(...arguments);
 	}
 	async serverLog(opts) {
+		if (opts.color && opts.color == "#000000") {
+			return;
+		}
 		const guild = this.client.guilds.resolve(opts.gId);
 		var channel;
 		try {
@@ -196,29 +201,3 @@ class App {
 const app = new App();
 setInterval(() => app.updateChannels(), 250);
 app.init(process.env.TOKEN);
-// const testClient = new Discord.Client();
-// testClient.login(process.env.TOKEN);
-// testClient.on("ready", () => {
-// 	console.log("-Begining test-");
-// 	startTest();
-// });
-// async function startTest() {
-// 	const guild = app.client.guilds.resolve("647138462444552213");
-// 	let t;
-// 	console.log("Creating channel...");
-// 	t = Date.now();
-// 	const channel = await guild.channels.create("TEST CHANNEL", {
-// 		type: "voice",
-// 	});
-// 	console.log("Channel created in %sms", Date.now() - t);
-
-// 	console.log("Renaming channel...");
-// 	t = Date.now();
-// 	await channel.edit({ name: "EDIT NAME" });
-// 	console.log("Channel edited in %sms", Date.now() - t);
-
-// 	console.log("Deleting channel...");
-// 	t = Date.now();
-// 	await channel.delete();
-// 	console.log("Channel deleted in %sms", Date.now() - t);
-// }
