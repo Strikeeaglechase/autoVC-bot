@@ -7,6 +7,7 @@ const updates = [
 	"Removed need for prefix based channels",
 	"Made channel name updates more consistant",
 	"Added bot status. Dm me for pricing info",
+	"Fixed some error log related problems",
 ];
 const commands = {
 	"[command name]": {
@@ -182,14 +183,16 @@ const commands = {
 		run: function (message) {
 			const vc = message.member.voice.channel;
 			if (!vc) {
-				return error("You must be in a voice call to use that command");
+				return this.error(
+					"You must be in a voice call to use that command"
+				);
 			}
 			const channel = this.channels.find((c) => c.channel.id == vc.id);
 			if (!channel) {
-				return error("Invalid voice channel");
+				return this.error("Invalid voice channel");
 			}
 			if (channel.owner.id != message.member.id) {
-				return error(
+				return this.error(
 					"You cannot edit the channel name of a channel you do not own"
 				);
 			}
@@ -205,7 +208,7 @@ const commands = {
 			example: "changeOwner @strikeeaglechase#0001",
 		},
 		run: function (message) {
-			if (!message.member.voice) {
+			if (!message.member.voice.channel) {
 				return this.error(
 					"You must be in a voice channel to use this command"
 				);
@@ -214,9 +217,7 @@ const commands = {
 				(c) => c.channel.id == message.member.voice.channelID
 			);
 			if (!channel) {
-				return this.error(
-					"Could not resolve channel owner... This may be due to bot crash/restart. Please have an admin delete this channel and create a new one"
-				);
+				return this.error("Invalid voice channel");
 			}
 			if (channel.owner.id != message.member.id) {
 				return this.error(

@@ -146,7 +146,7 @@ class App {
 		}
 	}
 	error(str) {
-		return "```diff\n-ERROR " + str + "```";
+		return "```diff\n-ERROR: " + str + "```";
 	}
 	success(str) {
 		return "```diff\n+DONE: " + str + " ```";
@@ -189,12 +189,7 @@ class App {
 		emb.setTimestamp();
 		try {
 			await channel.send(emb);
-		} catch (e) {
-			if (e) {
-				cLog("Problem logging to log channel");
-				cLog(e);
-			}
-		}
+		} catch (e) {}
 	}
 }
 
