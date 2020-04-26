@@ -10,7 +10,7 @@ const updates = [
 	"Fixed some error log related problems",
 	"Admins can now change the names/owners of channels without being owners",
 ];
-const version = "2.0.2";
+const version = "2.1.0";
 const commands = {
 	"[command name]": {
 		perms: [],
