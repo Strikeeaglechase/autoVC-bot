@@ -119,4 +119,5 @@ class SettingsController {
 		return { failed: false, msg: "Updated " + key + " to: " + val };
 	}
 }
+
 module.exports = SettingsController;
