@@ -8,7 +8,9 @@ const updates = [
 	"Made channel name updates more consistant",
 	"Added bot status. Dm me for pricing info",
 	"Fixed some error log related problems",
+	"Admins can now change the names/owners of channels without being owners",
 ];
+const version = "2.0.2";
 const commands = {
 	"[command name]": {
 		perms: [],
@@ -155,16 +157,17 @@ const commands = {
 			if (!channel) {
 				return this.error("Invalid voice channel");
 			}
-			if (channel.owner.id != message.member.id) {
+			if (
+				channel.owner.id != message.member.id &&
+				!message.member.hasPermission("ADMINISTRATOR")
+			) {
 				return this.error(
 					"You cannot edit the channel name of a channel you do not own"
 				);
 			}
 			channel.attemptingRename = true;
 			try {
-				console.log("awaiting edit");
 				vc.edit({ name: newName });
-				console.log("Await over");
 				channel.isCustomName = true;
 				return this.success("Set name to " + newName);
 			} catch (e) {
@@ -219,7 +222,10 @@ const commands = {
 			if (!channel) {
 				return this.error("Invalid voice channel");
 			}
-			if (channel.owner.id != message.member.id) {
+			if (
+				channel.owner.id != message.member.id &&
+				!message.member.hasPermission("ADMINISTRATOR")
+			) {
 				return this.error(
 					"You must be the owner of the vc to use this command"
 				);
@@ -263,9 +269,18 @@ const commands = {
 			const me = message.guild.members.resolve(CREATOR);
 			emb.setColor("#ff0044");
 			emb.addField("Creator", me || "Strikeeaglechase#0001", true);
-			emb.addField("Version", "2.0.0", true);
+			emb.addField("Version", version, true);
 			emb.addField("Updates", ">>> " + updates.join("\n"));
 			return emb;
+		},
+	},
+	curUsing: {
+		perms: [],
+		help: undefined,
+		run: async function (message) {
+			return (
+				this.channels.reduce((acc, cur) => acc + cur.memberCount, 0) || "0"
+			);
 		},
 	},
 };
