@@ -44,7 +44,7 @@ const events = {
 					members = vc.members.array();
 				}
 				this.serverLog({
-					name: "Joined voice channel " + vc.toString(),
+					name: "Joined voice channel " + vc.name,
 					gId: gId,
 					color: this.settings.get(gId).vcJoin,
 					details: [
@@ -116,7 +116,7 @@ const events = {
 			return;
 		}
 		this.serverLog({
-			name: "Channel updated " + newChannel.toString(),
+			name: "Channel updated " + newChannel.name,
 			gId: newChannel.guild.id,
 			color: this.settings.get(newChannel.guild.id).channelUpdate,
 			details: [

@@ -9,8 +9,9 @@ const updates = [
 	"Added bot status. Dm me for pricing info",
 	"Fixed some error log related problems",
 	"Admins can now change the names/owners of channels without being owners",
+	'Fixed some logs showing "#deleted-channel"',
 ];
-const version = "2.1.0";
+const version = "2.1.1";
 const commands = {
 	"[command name]": {
 		perms: [],
