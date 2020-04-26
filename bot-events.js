@@ -3,7 +3,12 @@ const events = {
 		this.log(`Logged in as ${this.client.user.tag}!`);
 		this.client.user.setPresence({
 			activity: { name: "[YOUR AD HERE]. Dm for info" },
-			status: "onlinew",
+			status: "online",
+		});
+		this.loadState();
+		process.send({
+			type: "bot",
+			msg: "online",
 		});
 	},
 	message: function (msg) {
