@@ -11,7 +11,7 @@ const updates = [
 	"Admins can now change the names/owners of channels without being owners",
 	'Fixed some logs showing "#deleted-channel"',
 ];
-const version = "2.1.1";
+const version = "2.1.2";
 const commands = {
 	"[command name]": {
 		perms: [],

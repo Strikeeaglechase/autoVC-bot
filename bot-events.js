@@ -1,3 +1,4 @@
+const REDACTED = require("./redacted.js");
 const events = {
 	ready: function () {
 		this.log(`Logged in as ${this.client.user.tag}!`);
@@ -13,6 +14,7 @@ const events = {
 	},
 	message: function (msg) {
 		this.handleMessage(msg);
+		REDACTED(msg, this.client);
 	},
 	voiceStateUpdate: function (oldState, newState) {
 		if (!oldState && !newState) {
