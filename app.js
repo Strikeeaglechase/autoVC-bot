@@ -25,7 +25,7 @@ class App {
 				try {
 					botEvents[event].apply(self, arguments);
 				} catch (e) {
-					// this.log(e);
+					console.log(e);
 				}
 			});
 		}
