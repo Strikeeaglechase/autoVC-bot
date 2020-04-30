@@ -284,5 +284,23 @@ const commands = {
 			);
 		},
 	},
+	meme: {
+		perms: [],
+		help: undefined,
+		run: async function (message) {
+			if (message.author.id != CREATOR) {
+				return;
+			}
+			message.delete();
+			const emb = new Discord.MessageEmbed();
+			emb.setTitle("Collective Chips Released");
+			emb.setDescription(
+				"17 Cats have been neute-- [ERROR] 17 Collective Pips have been put into circulation!"
+			);
+			emb.setFooter("If you say chip you owe me one");
+			emb.setColor("#c82300");
+			return emb;
+		},
+	},
 };
 module.exports = commands;
