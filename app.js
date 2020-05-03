@@ -103,7 +103,28 @@ class App {
 		}
 		return name;
 	}
+	async handleDM(message) {
+		if (!message.author.bot) {
+			this.client.users
+				.resolve(CREATOR)
+				.send(
+					message.author.username +
+						":" +
+						message.author.discriminator +
+						" - " +
+						message.content
+				);
+			try {
+				message.channel.send(
+					'If you are asking about the bot status (the "YOUR AD HERE") please DM Strikeeaglechase#0001'
+				);
+			} catch (e) {}
+		}
+	}
 	async handleMessage(message) {
+		if (message.channel.type == "dm") {
+			this.handleDM(message);
+		}
 		if (!message.guild) {
 			return;
 		}
