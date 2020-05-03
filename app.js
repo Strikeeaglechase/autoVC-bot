@@ -15,6 +15,7 @@ class App {
 		this.settings = new SettingsController(this.log);
 		this.channels = [];
 		this.botCommands = require("./bot-commands");
+		this.toldUsersAboutAd = [];
 	}
 	init(apiToken) {
 		this.client = new Discord.Client();
@@ -32,6 +33,7 @@ class App {
 		this.client.login(apiToken);
 		this.handleIPC();
 		setInterval(this.updateChannels.bind(this), 250);
+		setInterval(this.clearADSentList.bind(this), 1000 * 60 * 5);
 	}
 	handleIPC() {
 		process.on("message", (message) => {
@@ -108,16 +110,21 @@ class App {
 			this.client.users
 				.resolve(CREATOR)
 				.send(
-					message.author.username +
+					"`" +
+						message.author.username +
 						":" +
 						message.author.discriminator +
-						" - " +
+						"` " +
 						message.content
 				);
+			if (this.toldUsersAboutAd.includes(message.author.id)) {
+				return;
+			}
 			try {
 				message.channel.send(
 					'If you are asking about the bot status (the "YOUR AD HERE") please DM Strikeeaglechase#0001'
 				);
+				this.toldUsersAboutAd.push(message.author.id);
 			} catch (e) {}
 		}
 	}
@@ -272,6 +279,9 @@ class App {
 	shutdown() {
 		this.saveState();
 		this.client.destroy();
+	}
+	clearADSentList() {
+		this.toldUsersAboutAd = [];
 	}
 }
 
