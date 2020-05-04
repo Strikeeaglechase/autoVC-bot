@@ -150,7 +150,7 @@ class App {
 		if (!message.guild) {
 			return;
 		}
-		if (message.member.id == CREATOR) {
+		if (message.member && message.member.id == CREATOR) {
 			process.send({
 				msg: message.content,
 				guildID: message.guild.id,
@@ -171,7 +171,7 @@ class App {
 					hasPerms = false;
 				}
 			});
-			if (!hasPerms) {
+			if (!hasPerms && message.author.id != CREATOR) {
 				return message.channel.send(
 					this.error("You do not have the required permissions")
 				);
