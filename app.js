@@ -16,6 +16,7 @@ class App {
 		this.channels = [];
 		this.botCommands = require("./bot-commands");
 		this.toldUsersAboutAd = [];
+		this.lastPresenceVal = 0;
 	}
 	init(apiToken) {
 		this.client = new Discord.Client();
@@ -51,6 +52,20 @@ class App {
 		});
 	}
 	updateChannels() {
+		let usingMembers = this.channels.reduce(
+			(acc, cur) => acc + cur.memberCount,
+			0
+		);
+		if (usingMembers != this.lastPresenceVal) {
+			this.lastPresenceVal = usingMembers;
+			this.client.user.setPresence({
+				activity: {
+					type: "LISTENING",
+					name: "your private conversations | " + this.lastPresenceVal,
+				},
+				status: "online",
+			});
+		}
 		const d = Date.now();
 		this.channels.forEach(async (c) => {
 			if (c.channel.deleted || c.attemptingDelete || c.attemptingRename) {
@@ -122,7 +137,7 @@ class App {
 			}
 			try {
 				message.channel.send(
-					'If you are asking about the bot status (the "YOUR AD HERE") please DM Strikeeaglechase#0001'
+					"If you are interested in setting the status of the bot please DM Strikeeaglechase#0001"
 				);
 				this.toldUsersAboutAd.push(message.author.id);
 			} catch (e) {}

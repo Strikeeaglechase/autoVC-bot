@@ -3,7 +3,10 @@ const events = {
 	ready: function () {
 		this.log(`Logged in as ${this.client.user.tag}!`);
 		this.client.user.setPresence({
-			activity: { name: "[YOUR AD HERE]. Dm for info" },
+			activity: {
+				type: "LISTENING",
+				name: "your private conversations | 0",
+			},
 			status: "online",
 		});
 		this.loadState();
