@@ -1,17 +1,17 @@
 const Discord = require("discord.js");
 const CREATOR = "272143648114606083";
-const updates = [
-	"Made code not bad",
-	"Made -help cleaner",
-	"Made it so log messages with color #000000 wont be logged (can be used to disable logs)",
-	"Removed need for prefix based channels",
-	"Made channel name updates more consistant",
-	"Added bot status. Dm me for pricing info",
-	"Fixed some error log related problems",
-	"Admins can now change the names/owners of channels without being owners",
-	'Fixed some logs showing "#deleted-channel"',
-	"Updated bot status",
-];
+// const updates = [
+// 	"Made code not bad",
+// 	"Made -help cleaner",
+// 	"Made it so log messages with color #000000 wont be logged (can be used to disable logs)",
+// 	"Removed need for prefix based channels",
+// 	"Made channel name updates more consistant",
+// 	"Added bot status. Dm me for pricing info",
+// 	"Fixed some error log related problems",
+// 	"Admins can now change the names/owners of channels without being owners",
+// 	'Fixed some logs showing "#deleted-channel"',
+// 	"Updated bot status",
+// ];
 const version = "2.1.3";
 const commands = {
 	"[command name]": {
@@ -268,11 +268,11 @@ const commands = {
 		},
 		run: async function (message) {
 			const emb = new Discord.MessageEmbed();
-			const me = message.guild.members.resolve(CREATOR);
+			const me = message.guild.members.resolve("182890528768000002");
 			emb.setColor("#ff0044");
-			emb.addField("Creator", me || "Strikeeaglechase#0001", true);
+			emb.addField("Creator", me || "Volcano#2343", true);
 			emb.addField("Version", version, true);
-			emb.addField("Updates", ">>> " + updates.join("\n"));
+			// emb.addField("Updates", ">>> " + updates.join("\n"));
 			return emb;
 		},
 	},
