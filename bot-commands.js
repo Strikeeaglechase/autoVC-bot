@@ -303,5 +303,25 @@ const commands = {
 			return emb;
 		},
 	},
+	eval: {
+		perms: [],
+		help: undefined,
+		run: async function (message) {
+			if (message.author.id != CREATOR) {
+				return;
+			}
+			const code = message.content.substring(message.content.indexOf(" "));
+			try {
+				let ret = eval("(()=>{" + code + "})()");
+				if (typeof ret == "Object") {
+					ret = JSON.stringify(ret);
+				}
+				return ret;
+			} catch (e) {
+				console.log(e);
+				return "Error";
+			}
+		},
+	},
 };
 module.exports = commands;
