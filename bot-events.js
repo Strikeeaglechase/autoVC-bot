@@ -43,6 +43,9 @@ const events = {
 					.members.array();
 				c.memberCount = members.length;
 			}
+			if (this.banList.includes(newState.member.id)) {
+				newState.member.voice.kick();
+			}
 			if (newState.channelID != this.settings.get(gId).VC_CREATOR_ID) {
 				const vc = newState.guild.channels.resolve(newState.channelID);
 				if (!members) {

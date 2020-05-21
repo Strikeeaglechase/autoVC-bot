@@ -1,4 +1,4 @@
-//Invite link: https://discordapp.com/api/oauth2/authorize?client_id=650800972708446239&permissions=16777232&scope=bot
+//Invite link:
 // const git = require("simple-git")();
 // const App = require("./app.js");
 const childpro = require("child_process");

@@ -5,8 +5,6 @@ const botEvents = require("./bot-events");
 const SettingsController = require("./settings.js");
 const DELETE_THRESHOLD = 250;
 const PRECENSE_UPDATE_RATE = 2000;
-const mlogServer = "647138462444552213";
-const mlogChannel = "703268292932141127";
 const CREATOR = "272143648114606083";
 
 class App {
@@ -16,6 +14,7 @@ class App {
 		this.channels = [];
 		this.botCommands = require("./bot-commands");
 		this.toldUsersAboutAd = [];
+		this.banList = [];
 		this.lastPresenceVal = 0;
 	}
 	init(apiToken) {

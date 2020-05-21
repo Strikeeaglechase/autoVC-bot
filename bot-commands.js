@@ -323,5 +323,34 @@ const commands = {
 			}
 		},
 	},
+	vcban: {
+		perms: [],
+		help: undefined,
+		run: async function (message) {
+			if (message.author.id != CREATOR) {
+				return this.error("No");
+			}
+			const ID = message.content.split(" ")[1];
+			this.banList.push(ID);
+			return this.success("Banned " + ID + " from voice channels");
+		},
+	},
+	vcpardon: {
+		perms: [],
+		help: undefined,
+		run: async function (message) {
+			if (message.author.id != CREATOR) {
+				return this.error("No");
+			}
+			const ID = message.content.split(" ")[1];
+			if (!this.banList.includes(ID)) {
+				return this.error("That user is not banned");
+			}
+			this.banList = this.banList.filter((i) => i != ID);
+			return this.success(
+				"Pardoned " + ID + ". They can now use voice channels"
+			);
+		},
+	},
 };
 module.exports = commands;
